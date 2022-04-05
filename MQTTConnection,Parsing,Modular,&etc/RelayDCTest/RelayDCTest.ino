@@ -1,5 +1,7 @@
-const int connection = 17; // Connection indicator (WiFi & MQTT)
-const int processing = 16; // process calibration & measurement data voltage & current
+#include <WiFi.h>
+
+const int connection = 19; // Connection indicator (WiFi & MQTT)
+const int processing = 18; // process calibration & measurement data voltage & current
 const int Interval = 250;
 
 void setup() {
@@ -10,9 +12,10 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-//  digitalWrite(connection, HIGH);Serial.println("Connection ON!");delay(Interval);
-  digitalWrite(processing, HIGH);Serial.println("processing ON!");delay(Interval);
-//  digitalWrite(connection, LOW);Serial.println("Connection OFF!");delay(Interval);
-  digitalWrite(processing, LOW);Serial.println("processing OFF!");delay(Interval);
+   for(int d=0; d<=1; d++){
+    digitalWrite(connection, HIGH);Serial.println("connection ON!"); delay(500);
+    digitalWrite(connection, LOW);Serial.println("connection OFF!"); delay(500);
+    digitalWrite(processing, HIGH);Serial.println("Processing ON!"); delay(500);
+    digitalWrite(processing, LOW);Serial.println("Processing OFF!"); delay(500);
+  }
 }

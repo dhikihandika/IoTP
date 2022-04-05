@@ -8,11 +8,17 @@
 #define CAL_LITERATION 48 //literation for calibration 48x16s=768s | 768s/60s=12,8m
 #define AvgSize 200
 
-// define board id
-unsigned int board_id = 68203; // this is Host id IP
+// Define board id
+unsigned int board_id; // this is Host id IP
 
-// WiFi config
-IPAddress local_IP(172, 16, 68, 203);
+// Static WiFi config (172.16.68.203)
+int16_t NId1 = 172;
+int16_t NId2 = 16;
+int16_t HId1 = 68;
+int16_t HId2 = 203;
+
+// Define Static WiFi config
+IPAddress local_IP(NId1, NId2, HId1, HId2);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress gateway(172, 16, 68, 1);
 IPAddress primaryDNS(8, 8, 8, 8);
@@ -28,10 +34,12 @@ SimpleKalmanFilter simpleKalmanFilter(2, 2, 0.01);
 
 const char broker[]         = "172.16.68.72";
 int        port             = 1883;
-const char topicPublish[]   = "ponds/power_meter/data/subs";
-const char topicPublish2[]  = "ponds/power_meter/calibration/subs";
 const char topicPublish3[]  = "ponds/power_meter/startup/subs";
-const char topicSubscribe[] = "ponds/power_meter/calibration/pubs/68203";
+char topicSubscribe[2048];
+String subCal = "ponds/power_meter/calibration/pubs/";
+String _subCalTopics;
+const char topicPublish2[]  = "ponds/power_meter/calibration/subs";
+const char topicPublish[]   = "ponds/power_meter/data/subs";
 
 unsigned long KeepAliveInterval = 60;
 unsigned long ConnectionTimeOutInterval = 30;
@@ -87,7 +95,7 @@ int instruction_calibrate = 33; //no instruction
 bool is_calibrate;
 bool close_doorBuffer;
 
-int r, s, t, u = 0; //for parsing data
+int r, s, t, u, v = 0; //for parsing data
 int a, b, c, d, e, f, g = 0; //for voltage Measure, indicator, wdt
 int h, i, j, k, l, m, n, o, p, q = 0; // for auto calibration and send data Cal
 
@@ -130,8 +138,22 @@ TaskHandle_t Task2;
 void setup() {
   Serial.begin(9600); 
   Serial2.begin(115200); 
+
+  // Initialize board_id
+  String B;
+  B += HId1;
+  B += HId2;
+  board_id = B.toInt();
+
+  // Initialize topic subscribe calibration (unique board_id)
+  _subCalTopics = subCal;
+  _subCalTopics += String(board_id);
+  _subCalTopics.toCharArray(topicSubscribe,2048);
+
+  // Initialiaze energy monitoring library
   emon0_0.current(A4, 38.3);                       // Current: input pin, calibration. ratio/Rburden
   emon0_1.current(A7, 38.3);                       // Current: input pin, calibration. ratio/Rburden
+  
   // Initialiaze digital pinout for indicator
   pinMode(boardInd, OUTPUT);
   pinMode(connection, OUTPUT);
@@ -160,9 +182,10 @@ void setup() {
 
   // Initialize value oldtime millis
   Serial.println("START IoT DEVICE !!!");
+  Serial.print("board_id:");Serial.println(board_id);
   oldtime = millis();
   
-  //create a task that will be executed in the Task1code() function, with priority 1 and executed on core 0
+  // Create a task that will be executed in the Task1code() function, with priority 1 and executed on core 0
   xTaskCreatePinnedToCore(
                     Task1code,   /* Task function. */
                     "Task1",     /* name of task. */
@@ -173,7 +196,7 @@ void setup() {
                     0);          /* pin task to core 0 */                  
   delay(500); 
 
-  //create a task that will be executed in the Task2code() function, with priority 1 and executed on core 1
+  // Create a task that will be executed in the Task2code() function, with priority 1 and executed on core 1
   xTaskCreatePinnedToCore(
                     Task2code,   /* Task function. */
                     "Task2",     /* name of task. */
@@ -201,7 +224,6 @@ void wifiSetup() {
 void wifiHandling() {
   while(WiFi.status() != WL_CONNECTED) { //WiFi not connected
     delay(500);
-//    Serial.print(g);Serial.println("s");
     blink_led2();
     wifiSetup();
     if(g==25){ // +- 60 s
@@ -209,6 +231,7 @@ void wifiHandling() {
       ESP.restart();
     } 
     g++;
+    Serial.print("g:");Serial.println(g);
   }
   while(WiFi.waitForConnectResult() != WL_CONNECTED) {
     Serial.println("Connection Failed! Rebooting...");
@@ -226,7 +249,7 @@ void wifiHandling() {
 
 void MQTTconnection() {
   // Each client must have a unique client ID
-  mqttClient.setId("ESP32S_GMI_VC_68203");
+  mqttClient.setId("ESP32S_GMI_VC_" + board_id);
 //  mqttClient.setKeepAliveInterval(KeepAliveInterval);
 //  mqttClient.setConnectionTimeout(ConnectionTimeOutInterval);
   Serial.print("Attempting to connect to the MQTT broker: ");
@@ -274,9 +297,9 @@ void OTA(){
      else if (error == OTA_END_ERROR) Serial.println("End Failed");
    });
    ArduinoOTA.begin();
-   Serial.println("Ready");
-   Serial.print("IP address: ");
-   Serial.println(WiFi.localIP());
+   Serial.println("OTA Ready");
+//   Serial.print("IP address: ");
+//   Serial.println(WiFi.localIP());
 }
 
 void subsMQTTMessage() {

@@ -23,6 +23,7 @@ MqttClient mqttClient(wifiClient);
 const char broker[] = "172.16.68.72";
 int        port     = 1883;
 const char topic[]  = "wheel1/rpm/data/subs1";
+const char willTopic[] = "wheel1/rpm/will";
 
 //Define digital pinout moude sensor and led indicator 
 const int sensorPIN = 5;
@@ -119,8 +120,26 @@ void wifiHandling() {
 }
 
 void MQTTconnection() {
+  // You can provide a unique client ID, if not set the library uses Arduin-millis()
   // Each client must have a unique client ID
   mqttClient.setId("ESP8266S_GMI_RPM_35");
+
+  // You can provide a username and password for authentication
+  // mqttClient.setUsernamePassword("username", "password");
+
+  // By default the library connects with the "clean session" flag set,
+  // you can disable this behaviour by using
+  // mqttClient.setCleanSession(false);
+
+  // set a will message, used by the broker when the connection dies unexpectantly
+  // you must know the size of the message before hand, and it must be set before connecting
+  String willPayload = "OH NO!";
+  bool willRetain = true;
+  int willQos = 1;
+
+  mqttClient.beginWill(willTopic, willPayload.length(), willRetain, willQos);
+  mqttClient.print(willPayload);
+  mqttClient.endWill();
   Serial.print("Attempting to connect to the MQTT broker: ");
   Serial.println(broker);
   MQTThandling();

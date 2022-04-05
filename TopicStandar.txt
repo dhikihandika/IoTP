@@ -1,0 +1,12 @@
+StartUp -> topicPublish3[]  = "ponds/power_meter/startup/subs"; (data board_id unique)
+Calibration -> topicSubscribe[] = "ponds/power_meter/calibration/pubs/68203" (topic board_id unique)
+Calibration -> topicPublish2[]  = "ponds/power_meter/calibration/subs"; (data board_id unique)
+DataPowerMeter -> topicPublish[]   = "ponds/power_meter/data/subs"; (data board_id unique)
+DataRPM -> topicPublish[]   = "ponds/rpm/data/subs"; (data board_id unique)
+
+
+
+
+{"sensor_id":"35","sensor_type":"1","rpm":"1442"}
+
+[{"dataVC":"68203;387.29;388.85;356.16;0.33;0.92;0.60;0.73;0.67;0.78;0.80;0.72;0.72;0.72;0.56;0.42;0.77;0.78;0.82;0.74;0.75;0.65;0.65;0.60;1.32;0.34;1.06;0.77;0.64;0.54;0.73;1.05;0.91;0.52;0.55;0.63;"}]

@@ -4,10 +4,16 @@
 #include <ArduinoMqttClient.h>
 
 //define board id
-unsigned int idRPM = 35;    //Wheel 1
+unsigned int idRPM = 35;    //board id from 1 - 35
 
-//WiFi Config
-IPAddress local_IP(172, 16, 68, 202);
+// Static WiFi config (172.16.68.202)
+int16_t NId1 = 172;
+int16_t NId2 = 16;
+int16_t HId1 = 68;
+int16_t HId2 = 202;
+
+// Define Static WiFi config
+IPAddress local_IP(NId1, NId2, HId1, HId2);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress gateway(172, 16, 68, 1);
 IPAddress primaryDNS(8, 8, 8, 8);
@@ -22,7 +28,7 @@ MqttClient mqttClient(wifiClient);
 //MQTT Config
 const char broker[] = "172.16.68.72";
 int        port     = 1883;
-const char topic[]  = "wheel1/rpm/data/subs1";
+const char topic[]  = "ponds/rpm/data/subs";
 
 //Define digital pinout moude sensor and led indicator 
 const int sensorPIN = 5;
@@ -120,7 +126,7 @@ void wifiHandling() {
 
 void MQTTconnection() {
   // Each client must have a unique client ID
-  mqttClient.setId("ESP8266S_GMI_RPM_35");
+  mqttClient.setId("ESP8266S_GMI_RPM_" + idRPM);
   Serial.print("Attempting to connect to the MQTT broker: ");
   Serial.println(broker);
   MQTThandling();
